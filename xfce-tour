@@ -1,0 +1,155 @@
+#!/usr/bin/env python3
+import gi
+import os
+import gettext
+import webbrowser
+
+gi.require_version("Gtk", "4.0")
+gi.require_version("Adw", "1")
+from gi.repository import Gtk, Adw
+
+# Setup gettext
+APPNAME = "xfce-tour"
+LOCALE_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), "locale")
+gettext.bindtextdomain(APPNAME, LOCALE_DIR)
+gettext.textdomain(APPNAME)
+_ = gettext.gettext
+
+class WelcomeApp(Adw.Application):
+    def __init__(self):
+        super().__init__(application_id="org.xfce.tour")
+        self.connect("activate", self.on_activate)
+
+    def on_activate(self, app):
+        win = Adw.ApplicationWindow(application=app)
+        win.set_title(_("Welcome to XFCE"))
+        win.set_default_size(640, 480)
+
+        carousel = Adw.Carousel()
+        carousel.set_margin_top(20)
+        carousel.set_margin_bottom(20)
+        carousel.set_margin_start(20)
+        carousel.set_margin_end(20)
+
+
+        # Create overlay to stack arrow on top of carousel
+        overlay = Gtk.Overlay()
+        overlay.set_child(carousel)
+
+        # Right arrow button
+        arrow = Gtk.Button()
+        arrow.set_child(Gtk.Label(label="→"))  # You can also use a custom icon if preferred
+        arrow.set_valign(Gtk.Align.CENTER)
+        arrow.set_halign(Gtk.Align.END)
+        arrow.set_margin_end(12)
+        arrow.set_margin_top(0)
+        arrow.set_margin_bottom(0)
+        arrow.set_margin_start(0)
+
+        # Add arrow to overlay
+        overlay.add_overlay(arrow)
+
+        # Move to next slide on click
+        arrow.connect("clicked", lambda w: carousel.set_position(carousel.get_position() + 1))
+
+        # Hide arrow on last slide
+        def update_arrow_visibility(*args):
+            arrow.set_visible(carousel.get_position() < carousel.get_n_pages() - 1)
+
+        carousel.connect("notify::position", update_arrow_visibility)
+        update_arrow_visibility()
+
+        # Set the overlay as the window's content
+        win.set_content(overlay)
+
+        # Page 1
+        carousel.append(self.create_image_page(
+            "images/sinking.svg",
+            _("Ahoy this is openSUSE!"),
+            _("Enjoy a lightweight desktop experience with XFCE 4.20.")
+        ))
+
+        # Page 2
+        carousel.append(self.create_image_page(
+            "images/bug.png",
+            _("Early adopter"),
+            _("Thank you for trying our experimental wayland variant of XFCE.")
+        ))
+
+        # Final page
+        final_page = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        final_page.set_valign(Gtk.Align.CENTER)
+        final_page.set_halign(Gtk.Align.CENTER)
+
+        image = Gtk.Image.new_from_file("images/xfce.svg")
+        image.set_pixel_size(128)
+        final_page.append(image)
+
+        label = Gtk.Label(label=_("Need help or want to learn more?"))
+        label.set_wrap(True)
+        label.set_justify(Gtk.Justification.CENTER)
+        final_page.append(label)
+
+        btn_docs = Gtk.Button(label=_("XFCE Documentation"))
+        btn_docs.connect("clicked", lambda w: webbrowser.open("https://docs.xfce.org/"))
+        final_page.append(btn_docs)
+
+        btn_community = Gtk.Button(label=_("openSUSE Forums"))
+        btn_community.connect("clicked", lambda w: webbrowser.open("https://forums.opensuse.org"))
+        final_page.append(btn_community)
+
+        btn_rn = Gtk.Button(label=_("Release notes"))
+        btn_rn.connect("clicked", lambda w: webbrowser.open("https://susedoc.github.io/release-notes/leap-16.0/html/release-notes/"))
+        final_page.append(btn_rn)
+
+        btn_bugzilla = Gtk.Button(label=_("Report issues"))
+        btn_bugzilla.connect("clicked", lambda w: webbrowser.open("https://en.opensuse.org/openSUSE:Testing"))
+        final_page.append(btn_bugzilla)
+
+
+        btn_close = Gtk.Button(label=_("Close"))
+        btn_close.connect("clicked", lambda w: app.quit())
+        final_page.append(btn_close)
+
+        carousel.append(final_page)
+
+        win.set_content(carousel)
+        win.present()
+
+
+
+    def create_image_page(self, image_path, title_text, subtitle_text):
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        box.set_valign(Gtk.Align.CENTER)
+        box.set_halign(Gtk.Align.CENTER)
+        box.set_margin_top(20)
+        box.set_margin_bottom(20)
+        box.set_margin_start(20)
+        box.set_margin_end(20)
+        box.set_size_request(500, -1)  # Force max width
+
+        image = Gtk.Image.new_from_file(image_path)
+        image.set_pixel_size(256)
+        box.append(image)
+
+        title = Gtk.Label()
+        title.set_markup(f"<span size='x-large'><b>{title_text}</b></span>")
+        title.set_wrap(True)
+        title.set_max_width_chars(40)
+        title.set_justify(Gtk.Justification.CENTER)
+        title.set_hexpand(True)
+        box.append(title)
+
+        subtitle = Gtk.Label(label=subtitle_text)
+        subtitle.set_wrap(True)
+        subtitle.set_max_width_chars(60)
+        subtitle.set_justify(Gtk.Justification.CENTER)
+        subtitle.set_hexpand(True)
+        box.append(subtitle)
+
+        return box
+
+if __name__ == "__main__":
+    app = WelcomeApp()
+    app.run()
+

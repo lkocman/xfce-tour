@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Exec=/usr/bin/xfce-tour
+Hidden=false
+NoDisplay=false
+X-GNOME-Autostart-enabled=true
+Name=Welcome to XFCE
+Comment=Simple welcome screen for new users
