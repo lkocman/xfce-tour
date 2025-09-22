@@ -71,6 +71,13 @@ class WelcomeApp(Adw.Application):
 
         # Page 2
         carousel.append(self.create_image_page(
+            "images/screecast.gif",
+            _("Brand new welcome"),
+            _("KDE and GNOME start with their own welcome apps...")
+        ))
+
+        # Page 3
+        carousel.append(self.create_image_page(
             "images/bug.png",
             _("Early adopter"),
             _("Thank you for trying our experimental wayland variant of XFCE.")
